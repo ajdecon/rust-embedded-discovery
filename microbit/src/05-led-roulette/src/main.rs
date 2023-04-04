@@ -8,8 +8,15 @@ use panic_rtt_target as _;
 use microbit::{
     board::Board,
     display::blocking::Display,
-    hal::{prelude::*, Timer},
+    hal::{Timer,},
 };
+
+const PIXELS: [(usize,usize); 16] = [
+    (0,0), (0,1), (0,2), (0,3), (0,4),
+    (1,4), (2,4), (3,4), (4,4),
+    (4,3), (4,2), (4,1), (4,0),
+    (3,0), (2,0), (1,0),
+];
 
 #[entry]
 fn main() -> ! {
@@ -19,17 +26,23 @@ fn main() -> ! {
     let mut timer = Timer::new(board.TIMER0);
     let mut display = Display::new(board.display_pins);
 
-    let light_it_all = [
-        [1,1,1,1,1],
-        [1,1,1,1,1],
-        [1,1,1,1,1],
-        [1,1,1,1,1],
-        [1,1,1,1,1],
+    let mut leds = [
+        [0,0,0,0,0],
+        [0,0,0,0,0],
+        [0,0,0,0,0],
+        [0,0,0,0,0],
+        [0,0,0,0,0],
     ];
 
+    let mut last_led = (0,0);
+
     loop {
-        display.show(&mut timer, light_it_all, 1000);
-        display.clear();
-        timer.delay_ms(1000_u32);
+        rprintln!("Start of new loop");
+        for current_led in PIXELS.iter() {
+            leds[last_led.0][last_led.1] = 0;
+            leds[current_led.0][current_led.1] = 1;
+            display.show(&mut timer, leds, 500);
+            last_led = *current_led;
+        }
     }
 }
